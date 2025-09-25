@@ -16,7 +16,6 @@ const nextConfig = {
     // Moved from experimental as per Next.js 15 requirements
     serverExternalPackages: [],
     // Vercel deployment optimization
-    output: 'standalone',
     trailingSlash: false,
     async headers() {
         return [

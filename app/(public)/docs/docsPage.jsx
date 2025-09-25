@@ -322,7 +322,7 @@ const IntroductionContent = ({ setSelectedSection }) => {
   useEffect(() => {
     const fetchProjectStats = async () => {
       try {
-        const response = await fetch('/api/docs?type=stats')
+        const response = await fetch('/api/documentation?type=stats')
         const data = await response.json()
         if (data.success && data.data.stats) {
           setProjectStats(data.data.stats)
