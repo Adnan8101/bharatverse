@@ -21,7 +21,7 @@ const Footer = () => {
             ]
         },
         {
-            title: "WEBSITE?",
+            title: "WEBSITE",
             links: [
                 { text: "Home", path: '/', icon: null },
                 { text: "Documentation", path: '/docs', icon: null },

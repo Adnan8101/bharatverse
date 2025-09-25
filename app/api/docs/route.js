@@ -43,7 +43,7 @@ export async function GET(request) {
     // Add basic project info
     if (type === 'all' || type === 'info') {
       response.info = {
-        name: 'GoCart',
+        name: 'BharatVerse',
         version: '1.0.0',
         description: 'Multi-vendor e-commerce platform',
         tech: ['Next.js', 'PostgreSQL', 'Prisma', 'TailwindCSS', 'Clerk'],

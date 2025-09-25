@@ -19,7 +19,7 @@ export async function POST(request) {
 
         // Create a comprehensive prompt for translation
         const prompt = `
-You are a professional translator for an e-commerce website called "GoCart". 
+You are a professional translator for an e-commerce website called "BharatVerse". 
 Please translate the following content from ${sourceLanguage} to ${targetLanguage}.
 
 IMPORTANT GUIDELINES:
@@ -30,7 +30,7 @@ IMPORTANT GUIDELINES:
 5. Maintain cultural appropriateness for the target language
 6. Use natural, fluent language that sounds native
 7. For e-commerce terms, use commonly accepted translations in ${targetLanguage}
-8. Keep brand names like "GoCart" unchanged
+8. Keep brand names like "BharatVerse" unchanged
 9. Preserve all placeholder variables like {{variable}} unchanged
 10. If you encounter technical terms or proper nouns, keep them in English
 

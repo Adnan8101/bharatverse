@@ -60,7 +60,7 @@ export async function POST(request) {
       <p><strong>This OTP will expire in 10 minutes.</strong></p>
       <p>If you didn't request this password change, please ignore this email or contact support.</p>
       <br>
-      <p>Best regards,<br>GoCart Team</p>
+      <p>Best regards,<br>BharatVerse Team</p>
     `;
 
     await sendEmail(email, 'Password Change Verification - OTP', emailContent);

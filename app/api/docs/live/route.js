@@ -363,8 +363,8 @@ export async function GET() {
     // Additional metadata
     const metadata = {
       version: '1.0.0',
-      title: 'GoCart API Documentation',
-      description: 'Complete API reference for the GoCart multi-vendor e-commerce platform',
+      title: 'BharatVerse API Documentation',
+      description: 'Complete API reference for the BharatVerse multi-vendor e-commerce platform',
       baseUrl,
       authentication: {
         clerk: {

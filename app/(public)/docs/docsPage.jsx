@@ -1988,7 +1988,7 @@ const FutureScopeContent = () => (
         Join our community and be part of the next generation of e-commerce platforms.
       </p>
       <div className="flex items-center gap-4">
-        <a href="https://github.com/GreatStackDev/goCart" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
+        <a href="https://github.com/Adnan8101/bharatverse" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
           <ExternalLink size={16} />
           GitHub Repository
         </a>

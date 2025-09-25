@@ -126,7 +126,7 @@ const ContactPage = () => {
               <div className="mt-8 pt-8 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-4">Follow Us</h3>
                 <div className="flex items-center gap-3">
-                  <Link href="https://github.com/GreatStackDev/goCart" className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition">
+                  <Link href="https://github.com/Adnan8101/bharatverse" className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition">
                     <Github size={18} className="text-gray-600" />
                   </Link>
                   <Link href="/docs" className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition">
@@ -360,7 +360,7 @@ const ContactPage = () => {
                 Report bugs, request features, or contribute to our open-source project.
               </p>
               <Link 
-                href="https://github.com/GreatStackDev/goCart" 
+                href="https://github.com/Adnan8101/bharatverse" 
                 className="inline-block bg-gray-800 text-white px-6 py-2 rounded-lg hover:bg-gray-900 transition"
               >
                 Visit GitHub
