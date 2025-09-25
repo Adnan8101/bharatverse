@@ -164,4 +164,12 @@ The BharatVerse project is now:
 2. ✅ **Deployment ready** for Vercel with all configurations in place
 3. ✅ **Completely rebranded** from Gocart to BharatVerse across all files
 
-The project is production-ready and can be deployed to Vercel immediately following the instructions in `DEPLOYMENT.md`.
+## 🔧 Deployment Fix Applied
+
+**Issue Resolved**: Fixed Vercel deployment error "Function Runtimes must have a valid version"
+- Simplified `vercel.json` configuration
+- Removed problematic function runtime specification
+- Updated build commands to include Prisma generation
+- Created `VERCEL_TROUBLESHOOTING.md` for future reference
+
+The project is production-ready and can be deployed to Vercel immediately. See `VERCEL_TROUBLESHOOTING.md` for the fix details.
