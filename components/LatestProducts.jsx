@@ -27,7 +27,7 @@ const LatestProducts = () => {
     if (loading) {
         return (
             <div className='px-6 my-30 max-w-6xl mx-auto'>
-                <Title title='Latest Products' description='Loading latest products...' />
+                <Title title='Latest Artworks' description='Loading latest creations from Indian artisans...' />
                 <div className='mt-12 grid grid-cols-2 sm:flex flex-wrap gap-6 justify-between'>
                     {Array.from({ length: displayQuantity }).map((_, index) => (
                         <div key={index} className='bg-gray-200 animate-pulse rounded-lg h-80 w-64'></div>
@@ -39,7 +39,7 @@ const LatestProducts = () => {
 
     return (
         <div className='px-6 my-30 max-w-6xl mx-auto'>
-            <Title title='Latest Products' description={`Showing ${products.length} latest products`} href='/shop' />
+            <Title title='Latest Artworks' description={`Discover ${products.length} new arrivals in Indian art`} href='/shop' />
             <div className='mt-12 grid grid-cols-2 sm:flex flex-wrap gap-6 justify-between'>
                 {products.map((product, index) => (
                     <ProductCard key={product.id} product={product} />

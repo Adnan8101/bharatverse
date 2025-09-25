@@ -3,6 +3,7 @@ import { Star } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import { GiPaintBrush, GiIndianPalace, GiFlowerPot } from 'react-icons/gi'
 
 const ProductCard = ({ product }) => {
 
@@ -16,7 +17,18 @@ const ProductCard = ({ product }) => {
     return (
         <Link href={`/product/${product.id}`} className=' group max-xl:mx-auto'>
             <div className='bg-[#F5F5F5] h-40  sm:w-60 sm:h-68 rounded-lg flex items-center justify-center'>
-                <Image width={500} height={500} className='max-h-30 sm:max-h-40 w-auto group-hover:scale-115 transition duration-300' src={product.images[0]} alt="" />
+                {product.images && product.images[0] ? (
+                    <Image width={500} height={500} className='max-h-30 sm:max-h-40 w-auto group-hover:scale-115 transition duration-300' src={product.images[0]} alt={product.name || "Artwork"} />
+                ) : (
+                    <div className='flex items-center justify-center w-full h-full text-5xl text-orange-600'>
+                        {/* Cycle through art icons for variety */}
+                        {product.category === 'painting' && <GiPaintBrush />}
+                        {product.category === 'sculpture' && <GiIndianPalace />}
+                        {product.category === 'pottery' && <GiFlowerPot />}
+                        {/* Default icon if category is unknown */}
+                        {!['painting','sculpture','pottery'].includes(product.category) && <GiPaintBrush />}
+                    </div>
+                )}
             </div>
             <div className='flex justify-between gap-3 text-sm text-slate-800 pt-2 max-w-60'>
                 <div>

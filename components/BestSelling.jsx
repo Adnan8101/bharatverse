@@ -27,7 +27,7 @@ const BestSelling = () => {
     if (loading) {
         return (
             <div className='px-6 my-30 max-w-6xl mx-auto'>
-                <Title title='Best Selling' description='Loading best selling products...' />
+                <Title title='Best of Indian Art' description='Loading best art pieces from artisans...' />
                 <div className='mt-12 grid grid-cols-2 sm:flex flex-wrap gap-6 xl:gap-12'>
                     {Array.from({ length: displayQuantity }).map((_, index) => (
                         <div key={index} className='bg-gray-200 animate-pulse rounded-lg h-80 w-64'></div>
@@ -39,7 +39,7 @@ const BestSelling = () => {
 
     return (
         <div className='px-6 my-30 max-w-6xl mx-auto'>
-            <Title title='Best Selling' description={`Showing ${products.length} best selling products`} href='/shop' />
+            <Title title='Best of Indian Art' description={`Explore ${products.length} top-selling traditional artworks`} href='/shop' />
             <div className='mt-12 grid grid-cols-2 sm:flex flex-wrap gap-6 xl:gap-12'>
                 {products.map((product, index) => (
                     <ProductCard key={product.id} product={product} />
