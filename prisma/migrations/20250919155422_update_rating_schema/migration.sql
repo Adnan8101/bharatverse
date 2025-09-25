@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."Rating" ALTER COLUMN "rating" SET DATA TYPE DOUBLE PRECISION,
+ALTER COLUMN "orderId" DROP NOT NULL;

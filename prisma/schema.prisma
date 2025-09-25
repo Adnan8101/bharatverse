@@ -1,0 +1,322 @@
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+// Required for creating a User: id, name, email, cart (optional JSON string), image (optional)
+model User {
+    id    String  @id
+    name  String
+    email String
+    image String?
+    cart  Json    @default("{}")
+
+    // Relations
+    ratings     Rating[]
+    Address     Address[]
+    store       Store?
+    buyerOrders Order[]   @relation("BuyerRelation")
+}
+
+// Required for creating a Product: name, description, mrp, price, images, category, storeId
+model Product {
+    id          String   @id @default(cuid())
+    name        String
+    description String
+    mrp         Float
+    price       Float
+    images      String[]
+    category    String
+    inStock     Boolean  @default(true)
+    stockQuantity Int    @default(0)
+    storeId     String
+    status      String   @default("pending") // "pending", "approved", "rejected"
+    adminNote   String?  // Admin's note for approval/rejection
+    reviewedBy  String?  // Admin who reviewed
+    reviewedAt  DateTime? // When reviewed
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+    orderItems OrderItem[]
+    rating     Rating[]
+
+    @@index([status])
+    @@index([storeId, status])
+}
+
+enum OrderStatus {
+    ORDER_PLACED
+    PROCESSING
+    SHIPPED
+    DELIVERED
+}
+
+enum PaymentMethod {
+    COD
+    CARD
+    RAZORPAY
+}
+
+// Required for creating an Order: total, userId, storeId, addressId, isPaid, paymentMethod, isCouponUsed, coupon (JSON), orderItems (nested)
+model Order {
+    id            String        @id @default(cuid())
+    total         Float
+    status        OrderStatus   @default(ORDER_PLACED)
+    userId        String
+    storeId       String
+    addressId     String
+    isPaid        Boolean       @default(false)
+    paymentMethod PaymentMethod
+    paymentId     String?       // For storing Razorpay payment ID or other payment reference
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+    isCouponUsed  Boolean       @default(false)
+    coupon        Json          @default("{}")
+    orderItems    OrderItem[]
+
+    // Relations
+    user    User    @relation("BuyerRelation", fields: [userId], references: [id])
+    store   Store   @relation(fields: [storeId], references: [id])
+    address Address @relation(fields: [addressId], references: [id])
+}
+
+// Required for creating an OrderItem: orderId, productId, quantity, price
+model OrderItem {
+    orderId   String
+    productId String
+    quantity  Int
+    price     Float
+
+    // Relations
+    order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    product Product @relation(fields: [productId], references: [id])
+
+    @@id([orderId, productId])
+}
+
+// Required for creating a Rating: rating, review, userId, productId
+model Rating {
+    id        String   @id @default(cuid())
+    rating    Float
+    review    String
+    userId    String
+    productId String
+    orderId   String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, productId, orderId])
+}
+
+// Required for creating an Address: userId, name, street, city, state, pincode, phone
+model Address {
+    id        String   @id @default(cuid())
+    userId    String
+    name      String
+    street    String
+    city      String
+    state     String
+    pincode   String
+    phone     String
+    isDefault Boolean  @default(false)
+    createdAt DateTime @default(now())
+
+    // Relations
+    Order Order[]
+    user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Required for creating a Coupon: code, description, discount, forNewUser, isPublic, expiresAt
+model Coupon {
+    code               String   @id
+    description        String
+    discountType       String   @default("percentage") // "percentage" or "fixed"
+    discountValue      Float    @default(0) // percentage (e.g., 10 for 10%) or fixed amount
+    maxDiscountAmount  Float?   // max discount for percentage type
+    minOrderAmount     Float    @default(0)
+    forNewUser         Boolean  @default(false)
+    forMember          Boolean  @default(false)
+    isPublic           Boolean  @default(true)
+    isActive           Boolean  @default(true)
+    usageLimit         Int?     // max number of times this coupon can be used
+    usedCount          Int      @default(0)
+    expiresAt          DateTime
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime @updatedAt @default(now())
+}
+
+// Store-specific coupons that need admin approval
+model StoreCoupon {
+    id                 String   @id @default(cuid())
+    code               String   @unique
+    description        String
+    discountType       String   @default("percentage") // "percentage" or "fixed"
+    discountValue      Float    @default(0) // percentage (e.g., 10 for 10%) or fixed amount
+    maxDiscountAmount  Float?   // max discount for percentage type
+    minOrderAmount     Float    @default(0)
+    forNewUser         Boolean  @default(false)
+    forMember          Boolean  @default(false)
+    usageLimit         Int?     // max number of times this coupon can be used
+    usedCount          Int      @default(0)
+    expiresAt          DateTime
+    storeId            String   // Which store created this coupon
+    status             String   @default("pending") // "pending", "approved", "rejected"
+    isActive           Boolean  @default(false) // Only active after admin approval
+    adminNote          String?  // Admin's note for approval/rejection
+    reviewedBy         String?  // Admin who reviewed
+    reviewedAt         DateTime? // When reviewed
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime @updatedAt @default(now())
+
+    // Relations
+    store              Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+    @@index([storeId])
+    @@index([status])
+}
+
+// Required for creating a Store: name, username, email, contact, description, address, password (optional: userId, status, isActive, logo)
+model Store {
+    id          String   @id @default(cuid())
+    userId      String?  @unique  // Made optional to allow anonymous store creation
+    name        String
+    description String
+    username    String   @unique
+    address     String
+    status      String   @default("pending")
+    isActive    Boolean  @default(false)
+    logo        String?  // Made optional since it's not always provided
+    email       String
+    contact     String
+    password    String?  // Made optional for existing stores, required for new ones
+    resetToken  String?  // For password reset functionality
+    resetTokenExpiry DateTime? // Token expiry time
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    Product Product[]
+    Order   Order[]
+    StoreCoupon StoreCoupon[]
+    user    User?    @relation(fields: [userId], references: [id])  // Made optional
+    chatConversation ChatConversation?
+    
+    // Store-to-store chat relations
+    store1Conversations StoreToStoreConversation[] @relation("Store1Conversations")
+    store2Conversations StoreToStoreConversation[] @relation("Store2Conversations")
+    sentMessages        StoreToStoreMessage[]      @relation("SentMessages")
+}
+
+// Contact form submissions model
+model ContactForm {
+    id          String   @id @default(cuid())
+    name        String
+    email       String
+    subject     String
+    message     String
+    type        String   @default("general") // general, support, business, feedback, bug
+    status      String   @default("pending") // pending, replied, closed
+    adminReply  String?  // Admin's reply message
+    repliedAt   DateTime? // When admin replied
+    repliedBy   String?  // Admin who replied
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}
+
+// Chat conversations between admin and store owners
+model ChatConversation {
+    id          String   @id @default(cuid())
+    storeId     String   @unique
+    lastMessage String?
+    lastMessageAt DateTime?
+    unreadByAdmin Boolean @default(false)
+    unreadByStore Boolean @default(false)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+    messages ChatMessage[]
+}
+
+// Store-to-store chat conversations
+model StoreToStoreConversation {
+    id            String   @id @default(cuid())
+    store1Id      String   // First store in conversation
+    store2Id      String   // Second store in conversation
+    lastMessage   String?
+    lastMessageAt DateTime?
+    unreadByStore1 Boolean @default(false)
+    unreadByStore2 Boolean @default(false)
+    unreadByAdmin  Boolean @default(false) // Admin can monitor
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    // Relations
+    store1   Store @relation("Store1Conversations", fields: [store1Id], references: [id], onDelete: Cascade)
+    store2   Store @relation("Store2Conversations", fields: [store2Id], references: [id], onDelete: Cascade)
+    messages StoreToStoreMessage[]
+
+    @@unique([store1Id, store2Id])
+    @@index([store1Id])
+    @@index([store2Id])
+}
+
+// Individual chat messages
+model ChatMessage {
+    id             String   @id @default(cuid())
+    conversationId String
+    senderId       String   // Store ID or "admin"
+    senderType     String   // "admin" or "store"
+    message        String
+    messageType    String   @default("text") // text, image, file
+    isRead         Boolean  @default(false)
+    createdAt      DateTime @default(now())
+
+    // Relations
+    conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+    @@index([conversationId, createdAt])
+}
+
+// Store-to-store chat messages
+model StoreToStoreMessage {
+    id             String   @id @default(cuid())
+    conversationId String
+    senderId       String   // Store ID of sender
+    message        String
+    messageType    String   @default("text") // text, image, file
+    isRead         Boolean  @default(false)
+    createdAt      DateTime @default(now())
+
+    // Relations
+    conversation StoreToStoreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender       Store @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+    @@index([conversationId, createdAt])
+}
+
+// OTP Verification for password changes and other purposes
+model OTPVerification {
+    id        String   @id @default(cuid())
+    email     String
+    otp       String
+    purpose   String   @default("password_change") // password_change, password_reset, etc.
+    expiresAt DateTime
+    isUsed    Boolean  @default(false)
+    createdAt DateTime @default(now())
+
+    @@unique([email, purpose])
+    @@index([email, purpose])
+}
