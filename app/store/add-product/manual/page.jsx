@@ -11,7 +11,36 @@ import Link from "next/link"
 export default function ManualAddProduct() {
 
     const router = useRouter()
-    const categories = ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books', 'Toys', 'Beauty', 'Food & Beverages', 'Automotive', 'Health']
+    const categories = [
+        // Traditional Art Categories
+        'painting',
+        'sculpture', 
+        'pottery',
+        
+        // Handcrafted Categories
+        'textile',
+        'accessories', 
+        'lighting',
+        'wellness',
+        
+        // Modern Categories
+        'electronics',
+        'gaming',
+        'clothing',
+        'jewelry',
+        'home-decor',
+        'kitchen',
+        'books',
+        'sports',
+        'beauty',
+        'food-beverages',
+        'automotive',
+        'health',
+        'toys',
+        'garden',
+        'musical-instruments',
+        'stationery'
+    ]
 
     const [images, setImages] = useState({ 1: null, 2: null, 3: null, 4: null })
     const [productInfo, setProductInfo] = useState({

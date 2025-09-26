@@ -13,6 +13,16 @@ export default function StoreManageProducts() {
     const [products, setProducts] = useState([])
     const [editingProduct, setEditingProduct] = useState(null)
     const [showEditModal, setShowEditModal] = useState(false)
+    const [showBatchImageModal, setShowBatchImageModal] = useState(false)
+    const [productsWithoutImages, setProductsWithoutImages] = useState([])
+    const [selectedProducts, setSelectedProducts] = useState([])
+    const [generationProgress, setGenerationProgress] = useState({
+        total: 0,
+        completed: 0,
+        failed: 0,
+        isGenerating: false,
+        results: []
+    })
     const [imageUploading, setImageUploading] = useState(false)
 
     const [editForm, setEditForm] = useState({
@@ -299,6 +309,173 @@ export default function StoreManageProducts() {
         }
     }
 
+    // Batch Image Generation Functions
+    const openBatchImageModal = () => {
+        const noImageProducts = products.filter(product => {
+            // Comprehensive check for missing images
+            const hasNoImages = !product.images || 
+                               product.images.length === 0 || 
+                               (Array.isArray(product.images) && product.images.every(img => !img || img.trim() === '')) ||
+                               (typeof product.images === 'string' && (!product.images || product.images.trim() === '')) ||
+                               (typeof product.images === 'string' && product.images === '[]') ||
+                               (typeof product.images === 'string' && product.images === 'null');
+            
+            return hasNoImages;
+        });
+        
+        setProductsWithoutImages(noImageProducts);
+        setSelectedProducts([]);
+        setGenerationProgress({
+            total: 0,
+            completed: 0,
+            failed: 0,
+            isGenerating: false,
+            results: []
+        });
+        setShowBatchImageModal(true);
+    }
+
+    const closeBatchImageModal = () => {
+        setShowBatchImageModal(false);
+        setSelectedProducts([]);
+        setGenerationProgress({
+            total: 0,
+            completed: 0,
+            failed: 0,
+            isGenerating: false,
+            results: []
+        });
+    }
+
+    const selectProductRange = (start, end) => {
+        const range = productsWithoutImages.slice(start - 1, end);
+        setSelectedProducts(range);
+    }
+
+    const generateBatchImages = async () => {
+        if (selectedProducts.length === 0) {
+            toast.error('Please select products to generate images for');
+            return;
+        }
+
+        setGenerationProgress(prev => ({
+            ...prev,
+            total: selectedProducts.length,
+            completed: 0,
+            failed: 0,
+            isGenerating: true,
+            results: []
+        }));
+
+        for (let i = 0; i < selectedProducts.length; i++) {
+            const product = selectedProducts[i];
+            
+            try {
+                const response = await fetch('/api/ai/generate-product-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        productId: product.id,
+                        productName: product.name,
+                        productDescription: product.description,
+                        productCategory: product.category
+                    })
+                });
+
+                const result = await response.json();
+
+                setGenerationProgress(prev => ({
+                    ...prev,
+                    completed: prev.completed + 1,
+                    results: [...prev.results, {
+                        productId: product.id,
+                        productName: product.name,
+                        success: result.success,
+                        imageUrl: result.success ? result.imageUrl : null,
+                        error: result.success ? null : result.error
+                    }]
+                }));
+
+                if (result.success) {
+                    // Update the product in the local state
+                    setProducts(prevProducts => 
+                        prevProducts.map(p => 
+                            p.id === product.id 
+                                ? { ...p, images: [result.imageUrl] }
+                                : p
+                        )
+                    );
+                }
+
+            } catch (error) {
+                console.error(`Error generating image for product ${product.id}:`, error);
+                
+                setGenerationProgress(prev => ({
+                    ...prev,
+                    completed: prev.completed + 1,
+                    failed: prev.failed + 1,
+                    results: [...prev.results, {
+                        productId: product.id,
+                        productName: product.name,
+                        success: false,
+                        error: error.message || 'Generation failed'
+                    }]
+                }));
+            }
+        }
+
+        setGenerationProgress(prev => ({
+            ...prev,
+            isGenerating: false
+        }));
+
+        toast.success('Batch image generation completed!');
+    }
+
+    const applyGeneratedImages = async () => {
+        const successfulResults = generationProgress.results.filter(result => result.success);
+        
+        if (successfulResults.length === 0) {
+            toast.error('No images were successfully generated');
+            return;
+        }
+
+        try {
+            setImageUploading(true);
+            
+            for (const result of successfulResults) {
+                await fetch('/api/store-owner/products', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        productId: result.productId,
+                        updateData: {
+                            images: [result.imageUrl]
+                        }
+                    })
+                });
+            }
+
+            toast.success(`Successfully applied ${successfulResults.length} generated images!`);
+            closeBatchImageModal();
+            
+            // Refresh products
+            fetchProducts();
+
+        } catch (error) {
+            console.error('Error applying generated images:', error);
+            toast.error('Failed to apply some images');
+        } finally {
+            setImageUploading(false);
+        }
+    }
+
     useEffect(() => {
         fetchProducts()
     }, [])
@@ -312,12 +489,21 @@ export default function StoreManageProducts() {
                     <h1 className="text-3xl font-bold text-slate-800">Manage Products</h1>
                     <p className="text-slate-600 mt-1">Update product information and stock availability</p>
                 </div>
-                <button 
-                    onClick={() => window.location.href = '/store/add-product'}
-                    className="bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-900 transition-colors"
-                >
-                    Add New Product
-                </button>
+                <div className="flex gap-3">
+                    <button 
+                        onClick={openBatchImageModal}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                    >
+                        <Camera size={18} />
+                        Generate Images
+                    </button>
+                    <button 
+                        onClick={() => window.location.href = '/store/add-product'}
+                        className="bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-900 transition-colors"
+                    >
+                        Add New Product
+                    </button>
+                </div>
             </div>
 
             {products.length === 0 ? (
@@ -672,6 +858,205 @@ export default function StoreManageProducts() {
                                 <Save size={16} />
                                 {imageUploading ? 'Updating...' : 'Update Product'}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Batch Image Generation Modal */}
+            {showBatchImageModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-slate-200">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-slate-800">Batch Image Generation</h2>
+                                    <p className="text-slate-600 text-sm mt-1">
+                                        Generate AI images for products without images
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={closeBatchImageModal}
+                                    className="text-slate-400 hover:text-slate-600"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="p-6">
+                            {productsWithoutImages.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <Camera size={48} className="text-slate-300 mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium text-slate-800 mb-2">All Products Have Images</h3>
+                                    <p className="text-slate-600">Every product in your store already has at least one image.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {/* Products without images list */}
+                                    <div>
+                                        <h3 className="text-lg font-medium text-slate-800 mb-3">
+                                            Products Without Images ({productsWithoutImages.length})
+                                        </h3>
+                                        
+                                        {/* Quick selection buttons */}
+                                        <div className="flex gap-2 mb-4 flex-wrap">
+                                            <button
+                                                onClick={() => selectProductRange(1, Math.min(10, productsWithoutImages.length))}
+                                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                                            >
+                                                Select 1-10
+                                            </button>
+                                            <button
+                                                onClick={() => selectProductRange(1, Math.min(20, productsWithoutImages.length))}
+                                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                                            >
+                                                Select 1-20
+                                            </button>
+                                            <button
+                                                onClick={() => selectProductRange(1, productsWithoutImages.length)}
+                                                className="px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-sm"
+                                            >
+                                                Select All ({productsWithoutImages.length})
+                                            </button>
+                                            <button
+                                                onClick={() => setSelectedProducts([])}
+                                                className="px-3 py-1 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 transition-colors text-sm"
+                                            >
+                                                Clear Selection
+                                            </button>
+                                        </div>
+                                        
+                                        {/* Products grid */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4">
+                                            {productsWithoutImages.map((product, index) => (
+                                                <div
+                                                    key={product.id}
+                                                    className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                                                        selectedProducts.find(p => p.id === product.id) 
+                                                            ? 'bg-blue-50 border-blue-300' 
+                                                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                                                    }`}
+                                                    onClick={() => {
+                                                        const isSelected = selectedProducts.find(p => p.id === product.id);
+                                                        if (isSelected) {
+                                                            setSelectedProducts(prev => prev.filter(p => p.id !== product.id));
+                                                        } else {
+                                                            setSelectedProducts(prev => [...prev, product]);
+                                                        }
+                                                    }}
+                                                >
+                                                    <div className="w-8 h-8 bg-slate-200 rounded flex items-center justify-center mr-3 flex-shrink-0">
+                                                        <Camera size={16} className="text-slate-400" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-sm text-slate-800 truncate">{product.name}</p>
+                                                        <p className="text-xs text-slate-600 capitalize">{product.category}</p>
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 ml-2">#{index + 1}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Generation Progress */}
+                                    {generationProgress.total > 0 && (
+                                        <div className="space-y-4">
+                                            <h4 className="font-medium text-slate-800">Generation Progress</h4>
+                                            
+                                            {/* Progress Bar */}
+                                            <div>
+                                                <div className="flex justify-between text-sm text-slate-600 mb-1">
+                                                    <span>
+                                                        {generationProgress.completed} of {generationProgress.total} completed
+                                                    </span>
+                                                    <span>
+                                                        {generationProgress.failed > 0 && (
+                                                            <span className="text-red-600">
+                                                                {generationProgress.failed} failed
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <div className="w-full bg-slate-200 rounded-full h-2">
+                                                    <div
+                                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                        style={{ width: `${(generationProgress.completed / generationProgress.total) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Results Summary */}
+                                            <div className="grid grid-cols-3 gap-4 text-center">
+                                                <div className="bg-blue-50 p-3 rounded-lg">
+                                                    <div className="text-xl font-bold text-blue-600">{generationProgress.total}</div>
+                                                    <div className="text-xs text-blue-600">Total</div>
+                                                </div>
+                                                <div className="bg-green-50 p-3 rounded-lg">
+                                                    <div className="text-xl font-bold text-green-600">
+                                                        {generationProgress.completed - generationProgress.failed}
+                                                    </div>
+                                                    <div className="text-xs text-green-600">Success</div>
+                                                </div>
+                                                <div className="bg-red-50 p-3 rounded-lg">
+                                                    <div className="text-xl font-bold text-red-600">{generationProgress.failed}</div>
+                                                    <div className="text-xs text-red-600">Failed</div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Detailed Results */}
+                                            {generationProgress.results.length > 0 && (
+                                                <div className="max-h-32 overflow-y-auto">
+                                                    <h5 className="text-sm font-medium text-slate-700 mb-2">Results:</h5>
+                                                    {generationProgress.results.map((result, index) => (
+                                                        <div key={index} className="flex items-center justify-between py-1 text-sm">
+                                                            <span className="text-slate-700 truncate">
+                                                                {result.productName}
+                                                            </span>
+                                                            <span className={`px-2 py-1 rounded text-xs ${
+                                                                result.success 
+                                                                    ? 'bg-green-100 text-green-700' 
+                                                                    : 'bg-red-100 text-red-700'
+                                                            }`}>
+                                                                {result.success ? 'Success' : 'Failed'}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    
+                                    {/* Action Buttons */}
+                                    <div className="flex justify-between gap-4">
+                                        <div className="text-sm text-slate-600">
+                                            {selectedProducts.length} products selected
+                                        </div>
+                                        
+                                        <div className="flex gap-3">
+                                            {generationProgress.completed > 0 && generationProgress.completed - generationProgress.failed > 0 && !generationProgress.isGenerating && (
+                                                <button
+                                                    onClick={applyGeneratedImages}
+                                                    disabled={imageUploading}
+                                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                                >
+                                                    <Check size={16} />
+                                                    Apply Images ({generationProgress.completed - generationProgress.failed})
+                                                </button>
+                                            )}
+                                            
+                                            <button
+                                                onClick={generateBatchImages}
+                                                disabled={selectedProducts.length === 0 || generationProgress.isGenerating}
+                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                            >
+                                                <Camera size={16} />
+                                                {generationProgress.isGenerating ? 'Generating...' : `Generate Images (${selectedProducts.length})`}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

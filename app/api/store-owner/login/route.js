@@ -49,7 +49,7 @@ export async function POST(request) {
         email: store.email,
         status: store.status
       },
-      process.env.JWT_SECRET || 'store-owner-secret-key',
+      process.env.JWT_SECRET || 'store-owner-secret-key-bharatverse-2025-production',
       { expiresIn: '24h' }
     );
     

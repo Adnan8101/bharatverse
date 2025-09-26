@@ -18,7 +18,7 @@ export async function GET() {
     }
     
     // Verify JWT token
-    const decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'store-owner-secret-key');
+    const decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'store-owner-secret-key-bharatverse-2025-production');
     
     // Get store information - always fetch fresh data from database
     const store = await prisma.store.findUnique({
@@ -44,7 +44,7 @@ export async function GET() {
           email: store.email,
           status: store.status
         },
-        process.env.JWT_SECRET || 'store-owner-secret-key',
+        process.env.JWT_SECRET || 'store-owner-secret-key-bharatverse-2025-production',
         { expiresIn: '24h' }
       );
 

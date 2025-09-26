@@ -15,13 +15,16 @@ const Hero = () => {
     return (
         <div className='mx-6'>
             <div className='flex max-xl:flex-col gap-8 max-w-7xl mx-auto my-10'>
-                <div className='relative flex-1 flex flex-col bg-green-200 rounded-3xl xl:min-h-100 group cursor-pointer hover:scale-[1.02] transition-transform' onClick={() => router.push('/shipping-offers')}>
+                                {/* Main Art Collections Card */}
+                <div className='relative flex-1 flex flex-col bg-gradient-to-br from-green-100 to-green-200 rounded-3xl xl:min-h-100 group cursor-pointer hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-2xl border border-green-200/50' onClick={() => router.push('/art-collections')}>
+                    {/* Subtle decorative overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl"></div>
                     <div className='p-5 sm:p-16'>
                         <div className='inline-flex items-center gap-3 bg-green-300 text-green-600 pr-4 p-1 rounded-full text-xs sm:text-sm'>
                             <span className='bg-green-600 px-3 py-1 max-sm:ml-1 rounded-full text-white text-xs'>NEWS</span> Free Shipping on Orders Above ₹2500! <ChevronRight className='group-hover:ml-2 transition-all' size={16} />
                         </div>
                         <h2 className='text-3xl sm:text-5xl leading-[1.2] my-3 font-medium bg-gradient-to-r from-slate-600 to-[#A0FF74] bg-clip-text text-transparent max-w-xs  sm:max-w-md'>
-                            Indian art treasures. Culture you'll cherish.
+                            Art collections. Culture you'll cherish.
                         </h2>
                         <div className='text-slate-800 text-sm font-medium mt-4 sm:mt-8'>
                             <p>Starts from</p>

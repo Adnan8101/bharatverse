@@ -3,7 +3,27 @@ import { Star } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
-import { GiPaintBrush, GiIndianPalace, GiFlowerPot } from 'react-icons/gi'
+import { 
+    GiPaintBrush, 
+    GiIndianPalace, 
+    GiFlowerPot, 
+    GiClothes,
+    GiDiamondRing,
+    GiLightBulb,
+    GiMeditation,
+    GiSofa,
+    GiKnifeFork,
+    GiGamepad,
+    GiHeartNecklace,
+    GiLaptop,
+    GiBookshelf,
+    GiFruitBowl,
+    GiCarWheel,
+    GiWeight,
+    GiFlowerEmblem,
+    GiGuitar,
+    GiPencil
+} from 'react-icons/gi'
 
 const ProductCard = ({ product }) => {
 
@@ -21,12 +41,38 @@ const ProductCard = ({ product }) => {
                     <Image width={500} height={500} className='max-h-30 sm:max-h-40 w-auto group-hover:scale-115 transition duration-300' src={product.images[0]} alt={product.name || "Artwork"} />
                 ) : (
                     <div className='flex items-center justify-center w-full h-full text-5xl text-orange-600'>
-                        {/* Cycle through art icons for variety */}
+                        {/* Category-specific icons */}
                         {product.category === 'painting' && <GiPaintBrush />}
                         {product.category === 'sculpture' && <GiIndianPalace />}
                         {product.category === 'pottery' && <GiFlowerPot />}
-                        {/* Default icon if category is unknown */}
-                        {!['painting','sculpture','pottery'].includes(product.category) && <GiPaintBrush />}
+                        {product.category === 'textile' && <GiClothes />}
+                        {product.category === 'accessories' && <GiHeartNecklace />}
+                        {product.category === 'lighting' && <GiLightBulb />}
+                        {product.category === 'wellness' && <GiMeditation />}
+                        {product.category === 'electronics' && <GiLaptop />}
+                        {product.category === 'gaming' && <GiGamepad />}
+                        {product.category === 'clothing' && <GiClothes />}
+                        {product.category === 'jewelry' && <GiDiamondRing />}
+                        {product.category === 'home-decor' && <GiSofa />}
+                        {product.category === 'kitchen' && <GiKnifeFork />}
+                        {product.category === 'books' && <GiBookshelf />}
+                        {product.category === 'sports' && <GiWeight />}
+                        {product.category === 'beauty' && <GiFlowerEmblem />}
+                        {product.category === 'food-beverages' && <GiFruitBowl />}
+                        {product.category === 'automotive' && <GiCarWheel />}
+                        {product.category === 'health' && <GiMeditation />}
+                        {product.category === 'toys' && <GiGamepad />}
+                        {product.category === 'garden' && <GiFlowerEmblem />}
+                        {product.category === 'musical-instruments' && <GiGuitar />}
+                        {product.category === 'stationery' && <GiPencil />}
+                        {/* Default icon if category doesn't match */}
+                        {![
+                            'painting', 'sculpture', 'pottery', 'textile', 'accessories', 
+                            'lighting', 'wellness', 'electronics', 'gaming', 'clothing', 
+                            'jewelry', 'home-decor', 'kitchen', 'books', 'sports', 'beauty', 
+                            'food-beverages', 'automotive', 'health', 'toys', 'garden', 
+                            'musical-instruments', 'stationery'
+                        ].includes(product.category) && <GiPaintBrush />}
                     </div>
                 )}
             </div>

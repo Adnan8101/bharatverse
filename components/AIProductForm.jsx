@@ -23,16 +23,34 @@ export default function AIProductForm({ onProductGenerated, initialData = null }
   });
 
   const categories = [
-    'Electronics',
-    'Clothing',
-    'Home & Garden',
-    'Sports',
-    'Books',
-    'Toys',
-    'Beauty',
-    'Food & Beverages',
-    'Automotive',
-    'Health'
+    // Traditional Art Categories
+    'painting',
+    'sculpture', 
+    'pottery',
+    
+    // Handcrafted Categories
+    'textile',
+    'accessories', 
+    'lighting',
+    'wellness',
+    
+    // Modern Categories
+    'electronics',
+    'gaming',
+    'clothing',
+    'jewelry',
+    'home-decor',
+    'kitchen',
+    'books',
+    'sports',
+    'beauty',
+    'food-beverages',
+    'automotive',
+    'health',
+    'toys',
+    'garden',
+    'musical-instruments',
+    'stationery'
   ];
 
   const handleImageSelect = (e) => {
